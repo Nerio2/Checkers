@@ -6,6 +6,7 @@ public class PawnsController : MonoBehaviour {
     public GameObject Pawn1;
     public GameObject Pawn2;
     public GameObject MoveMark;
+    public int round=1;             //1-player1     0-player0
 
     //private:
     private List<GameObject> Player0Pawns = new List<GameObject>();
@@ -44,12 +45,15 @@ public class PawnsController : MonoBehaviour {
 
 
     void Update() {
-
+        if ( round > 1 )
+            round = 0;
 
     }
 
     public void chosen(int x , int y , int player , int id) {
         click();
+        if ( player != round )
+            return;
         if ( player == 0 ) {
             marked = Player0Pawns [id];
         } else {
@@ -92,6 +96,7 @@ public class PawnsController : MonoBehaviour {
     public void move(Vector3 position) {
         click();
         marked.transform.position = position;
+        round++;
     }
 
     public void click() {
