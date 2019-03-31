@@ -17,6 +17,6 @@ public class PawnController : MonoBehaviour {
     }
 
     private void OnMouseDown() {
-        GetComponentInParent<PawnsController>().chosen(( int ) transform.position.x / 2 , ( int ) transform.position.y / 2 , player , id);
+        GetComponentInParent<PawnsController>().chosen(( int ) transform.position.x / 2 , ( int ) transform.position.y / 2 , player , gameObject);
     }
 }

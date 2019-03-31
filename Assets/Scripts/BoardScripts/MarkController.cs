@@ -17,6 +17,6 @@ public class MarkController : MonoBehaviour
     }
 
     private void OnMouseDown() {
-        GetComponentInParent<PawnsController>().move(transform.position);
+        GetComponentInParent<PawnsController>().move(transform);
     }
 }
