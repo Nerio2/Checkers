@@ -13,6 +13,7 @@ public class PawnsController : MonoBehaviour {
     private List<GameObject> Player1Pawns = new List<GameObject>();
     private Dictionary<GameObject , GameObject> marks = new Dictionary<GameObject , GameObject>();
     private GameObject marked;
+    private bool block = false;
 
     void Start() {
         int colx = 7;
@@ -74,8 +75,13 @@ public class PawnsController : MonoBehaviour {
         return false;
     }
 
-    public void chosen(int x , int y , int player, GameObject pawn) {
+    public void chosen(GameObject pawn) {
+        int player = pawn.GetComponent<PawnController>().player;
         click();
+        if ( block && !pawn.Equals(marked) ) {
+            chosen(marked);
+            return;
+        }
         if ( player != round )
             return;
         if ( player == 0 ) {
@@ -139,6 +145,8 @@ public class PawnsController : MonoBehaviour {
         }
     }
     public void move(Transform mark) {
+        block = false;
+        round++;
         marked.transform.position = mark.position;
         foreach ( var obj in marks ) {
             if ( obj.Key.transform == mark ) {
@@ -149,11 +157,16 @@ public class PawnsController : MonoBehaviour {
                     else
                         Player1Pawns.Remove(obj.Value);
                     Destroy(obj.Value);
+                    round--;
+                    chosen(marked);
+                    block = true;
+
                 }
             }
         }
-        round++;
-        click();
+        if ( !block )
+            click();
+
     }
 
     public void click() {

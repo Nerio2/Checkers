@@ -8,7 +8,7 @@ public class PawnController : MonoBehaviour {
     public bool super;
     // Start is called before the first frame update
     void Start() {
-        
+
     }
 
     // Update is called once per frame
@@ -17,6 +17,6 @@ public class PawnController : MonoBehaviour {
     }
 
     private void OnMouseDown() {
-        GetComponentInParent<PawnsController>().chosen(( int ) transform.position.x / 2 , ( int ) transform.position.y / 2 , player , gameObject);
+        GetComponentInParent<PawnsController>().chosen(gameObject);
     }
 }
