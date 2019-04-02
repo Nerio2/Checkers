@@ -110,8 +110,9 @@ public class PawnsController : MonoBehaviour {
                                     if ( objj.transform.position == markposition )
                                         skip = true;
                                 });
-                                if ( !skip )
+                                if ( !skip ) {
                                     beaten = obj;
+                                }
                             } else skip = true;
                         }
                     });
@@ -125,8 +126,9 @@ public class PawnsController : MonoBehaviour {
                                     if ( objj.transform.position == markposition )
                                         skip = true;
                                 });
-                                if ( !skip )
+                                if ( !skip ) {
                                     beaten = obj;
+                                }
                             } else skip = true;
                         }
                     });
@@ -134,13 +136,19 @@ public class PawnsController : MonoBehaviour {
                         if ( obj.transform.position == markposition && player == 0 )
                             skip = true;
                     });
-                    if ( markposition.x > -8 && markposition.x < 8 && markposition.y < 8 && markposition.y > -8 && !skip ) {
-
+                    if ( beaten == null && ( block ||
+                        ( player == 0 ? markposition.y < pawn.transform.position.y : markposition.y > pawn.transform.position.y ) ) )
+                        skip = true;
+                    else if ( markposition.x > -8 && markposition.x < 8 && markposition.y < 8 && markposition.y > -8 && !skip ) {
                         GameObject mark = Instantiate(MoveMark , marked.transform);
                         mark.transform.position = markposition;
                         marks.Add(mark , beaten);
                     }
                 }
+            }
+            if ( marks.Count == 0 ) {
+                round++;
+                block = false;
             }
         }
     }
@@ -158,8 +166,9 @@ public class PawnsController : MonoBehaviour {
                         Player1Pawns.Remove(obj.Value);
                     Destroy(obj.Value);
                     round--;
-                    chosen(marked);
                     block = true;
+                    chosen(marked);
+
 
                 }
             }
