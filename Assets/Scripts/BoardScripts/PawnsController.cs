@@ -52,23 +52,21 @@ public class PawnsController : MonoBehaviour {
     void Update() {
         if ( round > 1 )
             round = 0;
-
     }
 
     // checking if is atack avaiable for the player
     public bool isAtackAvailable(int player) {
-        for ( int i = 0 ; i < 2 ; i++ ) {
-            for ( int j = 0 ; j < PlayerPawns [i].Count ; j++ )
-                if ( isAtackAvailable(PlayerPawns [i] [j]) )
-                    return true;
-        }
+        for ( int i = 0 ; i < PlayerPawns [player].Count ; i++ )
+            if ( isAtackAvailable(PlayerPawns [player] [i]) )
+                return true;
+
         return false;
     }
 
     // return true if is atack is avaiable for the pawn
     public bool isAtackAvailable(GameObject pawn) {
         bool avaiable = false;
-        int player = pawn.GetComponent<PawnController>().player == 1 ? 0 : 1;
+        int player = pawn.GetComponent<PawnController>().player == 1 ? 0 : 1;   //player which is attacked
         Vector3 pawnPosition = pawn.transform.position;
         for ( int i = 0 ; i < 2 ; i++ ) {
             for ( int j = 0 ; j < 2 ; j++ ) {
@@ -77,12 +75,12 @@ public class PawnsController : MonoBehaviour {
                     bool skip = false;
                     if ( obj.transform.position == markposition ) {
                         Vector3 objPosition = obj.transform.position;
-                        markposition = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
+                        Vector3 markpos = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
                         PlayerPawns [player].ForEach(objj => {
-                            if ( objj.transform.position == markposition )
+                            if ( objj.transform.position == markpos )
                                 skip = true;
                         });
-                        if ( !skip ) {
+                        if ( !skip && ( markpos.x > -8 && markpos.x < 8 && markpos.y < 8 && markpos.y > -8 ) ) {
                             avaiable = true;
                             return;
                         }
@@ -96,14 +94,60 @@ public class PawnsController : MonoBehaviour {
         return false;
     }
 
-    private void markMoves(GameObject pawn , bool attackOnly) {
+    public void markAtacks(GameObject pawn) {
+        int player = pawn.GetComponent<PawnController>().player == 1 ? 0 : 1;
+        Vector3 pawnPosition = pawn.transform.position;
+        for ( int i = 0 ; i < 2 ; i++ ) {
+            for ( int j = 0 ; j < 2 ; j++ ) {
+                Vector3 markposition = new Vector3(2 - ( 4 * ( i % 2 ) ) + pawnPosition.x , 2 - ( j % 2 * 4 ) + pawnPosition.y , 0);
+                PlayerPawns [player].ForEach(obj => {
+                    bool skip = false;
+                    GameObject beaten = null;
+                    if ( obj.transform.position == markposition ) {
+                        beaten = obj;
+                        Vector3 objPosition = obj.transform.position;
+                        Vector3 markpos = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
+                        PlayerPawns.ForEach(Pawns => {
+                            Pawns.ForEach(objj => {
+                                if ( objj.transform.position == markpos )
+                                    skip = true;
+                            });
+                        });
+                        if ( skip || !(markpos.x > -8 && markpos.x < 8 && markpos.y < 8 && markpos.y > -8 ))
+                            return;
+                        else {
+                            var mark = Instantiate(MoveMark , pawn.transform);
+                            mark.transform.position = markpos;
+                            marks.Add(mark , beaten);
+                        }
+                    }
+                });
+            }
+        }
+    }
+
+    public void markMoves(GameObject pawn) {
         int player = pawn.GetComponent<PawnController>().player;
         Vector3 pawnPosition = pawn.transform.position;
+        for ( int i = 0 ; i < 2 ; i++ ) {
+            bool skip = false;
+            Vector3 markposition = new Vector3(pawnPosition.x + 2 - ( 4 * i ) , pawnPosition.y + 2 - ( 4 * player ) , 0);
+            PlayerPawns.ForEach(Pawns => {
+                Pawns.ForEach(Pawn => {
+                    if ( Pawn.transform.position == markposition )
+                        skip = true;
+                });
+            });
+            if ( skip || !(markposition.x > -8 && markposition.x < 8 && markposition.y < 8 && markposition.y > -8 ))
+                continue;
+            var mark = Instantiate(MoveMark , pawn.transform);
+            mark.transform.position = markposition;
+            marks.Add(mark , null);
+        }
     }
 
     public void chosen(GameObject pawn) {
         marked = pawn;
-        Debug.Log(isAtackAvailable(pawn));
         int player = pawn.GetComponent<PawnController>().player;
         click();
         if ( block && !pawn.Equals(marked) ) {
@@ -112,67 +156,20 @@ public class PawnsController : MonoBehaviour {
         }
         if ( player != round )
             return;
-        Vector3 pawnPosition = marked.transform.position;
-        if ( marked.GetComponent<PawnController>().super ) {
-            ;
-        } else {
-            for ( int i = 0 ; i < 2 ; i++ ) {
-                for ( int j = 0 ; j < 2 ; j++ ) {
-                    bool skip = false;
-                    bool changed = false;
-                    Vector3 obstruction = new Vector3(0 , 0 , 0);
-                    Vector3 markposition = new Vector3(2 - ( 4 * ( i % 2 ) ) + pawnPosition.x , 2 - ( j % 2 * 4 ) + pawnPosition.y , 0);
-                    GameObject beaten = null;
-                    PlayerPawns [0].ForEach(obj => {
-                        if ( obj.transform.position == markposition ) {
-                            if ( player == 1 && !changed ) {
-                                changed = true;
-                                Vector3 objPosition = obj.transform.position;
-                                markposition = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
-                                PlayerPawns [0].ForEach(objj => {
-                                    if ( objj.transform.position == markposition )
-                                        skip = true;
-                                });
-                                if ( !skip ) {
-                                    beaten = obj;
-                                }
-                            } else skip = true;
-                        }
-                    });
-                    PlayerPawns [1].ForEach(obj => {
-                        if ( obj.transform.position == markposition ) {
-                            if ( player == 0 && !changed ) {
-                                changed = true;
-                                Vector3 objPosition = obj.transform.position;
-                                markposition = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
-                                PlayerPawns [1].ForEach(objj => {
-                                    if ( objj.transform.position == markposition )
-                                        skip = true;
-                                });
-                                if ( !skip ) {
-                                    beaten = obj;
-                                }
-                            } else skip = true;
-                        }
-                    });
-                    PlayerPawns [0].ForEach(obj => {
-                        if ( obj.transform.position == markposition && player == 0 )
-                            skip = true;
-                    });
-                    if ( beaten == null && ( block ||
-                        ( player == 0 ? markposition.y < pawn.transform.position.y : markposition.y > pawn.transform.position.y ) ) )
-                        skip = true;
-                    else if ( markposition.x > -8 && markposition.x < 8 && markposition.y < 8 && markposition.y > -8 && !skip ) {
-                        GameObject mark = Instantiate(MoveMark , marked.transform);
-                        mark.transform.position = markposition;
-                        marks.Add(mark , beaten);
-                    }
+        Debug.Log("isAtackAvailable(" + player + ") " + isAtackAvailable(player));
+        if ( isAtackAvailable(player) ) {
+            if ( isAtackAvailable(marked) ) {
+                markAtacks(marked);
+                if ( block ) {
+                    if ( marks.Count == 0 )
+                        round++;
                 }
-            }
-            if ( marks.Count == 0 ) {
-                round++;
-                block = false;
-            }
+            } else return;
+        } else if ( !block ) {
+            markMoves(marked);
+        } else {
+            round++;
+            block = false;
         }
     }
     public void move(Transform mark) {
