@@ -9,8 +9,8 @@ public class PawnsController : MonoBehaviour {
     public int round = 1;             //1-player1     0-player0
 
     //private:
-    private List<GameObject> Player0Pawns = new List<GameObject>();
-    private List<GameObject> Player1Pawns = new List<GameObject>();
+
+    private List<List<GameObject>> PlayerPawns = new List<List<GameObject>>();
     private Dictionary<GameObject , GameObject> marks = new Dictionary<GameObject , GameObject>();
     private GameObject marked;
     private bool block = false;
@@ -19,6 +19,8 @@ public class PawnsController : MonoBehaviour {
         int colx = 7;
         int rowy = 0;
         int i = 0;
+        List<GameObject> Player0Pawns = new List<GameObject>();
+        List<GameObject> Player1Pawns = new List<GameObject>();
         for ( int y = 0 ; y < 3 ; y++ ) {
 
             for ( int x = 0 ; x < 4 ; x++ ) {
@@ -32,6 +34,8 @@ public class PawnsController : MonoBehaviour {
             colx = 6 + y % 2;
             rowy += 1;
         }
+        PlayerPawns.Add(Player0Pawns);
+        PlayerPawns.Add(Player1Pawns);
 
     }
 
@@ -51,31 +55,55 @@ public class PawnsController : MonoBehaviour {
 
     }
 
-    public bool isAtackAvailable(int player) {                  //for all pawns
-        if ( player == 1 ) {
-            for ( int i = 0 ; i < Player0Pawns.Count ; i++ ) {
-                if ( isAtackAvailable(player , Player0Pawns [i]) )
+    // checking if is atack avaiable for the player
+    public bool isAtackAvailable(int player) {
+        for ( int i = 0 ; i < 2 ; i++ ) {
+            for ( int j = 0 ; j < PlayerPawns [i].Count ; j++ )
+                if ( isAtackAvailable(PlayerPawns [i] [j]) )
                     return true;
-            }
-        } else {
-            for ( int i = 0 ; i < Player1Pawns.Count ; i++ ) {
-                if ( isAtackAvailable(player , Player1Pawns [i]) )
-                    return true;
-            }
         }
         return false;
     }
 
-    public bool isAtackAvailable(int player , GameObject pawn) {
+    // return true if is atack is avaiable for the pawn
+    public bool isAtackAvailable(GameObject pawn) {
+        bool avaiable = false;
+        int player = pawn.GetComponent<PawnController>().player == 1 ? 0 : 1;
         Vector3 pawnPosition = pawn.transform.position;
-        for ( int i = 0 ; i < 4 ; i++ ) {
-            Vector3 markposition = new Vector3(2 - ( 4 * ( i % 2 ) ) + pawnPosition.x , 2 - ( i % 2 * 4 ) + pawnPosition.y , 0);
+        for ( int i = 0 ; i < 2 ; i++ ) {
+            for ( int j = 0 ; j < 2 ; j++ ) {
+                Vector3 markposition = new Vector3(2 - ( 4 * ( i % 2 ) ) + pawnPosition.x , 2 - ( j % 2 * 4 ) + pawnPosition.y , 0);
+                PlayerPawns [player].ForEach(obj => {
+                    bool skip = false;
+                    if ( obj.transform.position == markposition ) {
+                        Vector3 objPosition = obj.transform.position;
+                        markposition = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
+                        PlayerPawns [player].ForEach(objj => {
+                            if ( objj.transform.position == markposition )
+                                skip = true;
+                        });
+                        if ( !skip ) {
+                            avaiable = true;
+                            return;
+                        }
+                    }
+                });
+                if ( avaiable )
+                    return avaiable;
+            }
         }
 
         return false;
+    }
+
+    private void markMoves(GameObject pawn , bool attackOnly) {
+        int player = pawn.GetComponent<PawnController>().player;
+        Vector3 pawnPosition = pawn.transform.position;
     }
 
     public void chosen(GameObject pawn) {
+        marked = pawn;
+        Debug.Log(isAtackAvailable(pawn));
         int player = pawn.GetComponent<PawnController>().player;
         click();
         if ( block && !pawn.Equals(marked) ) {
@@ -84,11 +112,7 @@ public class PawnsController : MonoBehaviour {
         }
         if ( player != round )
             return;
-        if ( player == 0 ) {
-            marked = Player0Pawns.Find(pawn.Equals);
-        } else {
-            marked = Player1Pawns.Find(pawn.Equals);
-        }
+        Vector3 pawnPosition = marked.transform.position;
         if ( marked.GetComponent<PawnController>().super ) {
             ;
         } else {
@@ -97,16 +121,15 @@ public class PawnsController : MonoBehaviour {
                     bool skip = false;
                     bool changed = false;
                     Vector3 obstruction = new Vector3(0 , 0 , 0);
-                    Vector3 pawnPosition = marked.transform.position;
                     Vector3 markposition = new Vector3(2 - ( 4 * ( i % 2 ) ) + pawnPosition.x , 2 - ( j % 2 * 4 ) + pawnPosition.y , 0);
                     GameObject beaten = null;
-                    Player0Pawns.ForEach(obj => {
+                    PlayerPawns [0].ForEach(obj => {
                         if ( obj.transform.position == markposition ) {
                             if ( player == 1 && !changed ) {
                                 changed = true;
                                 Vector3 objPosition = obj.transform.position;
                                 markposition = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
-                                Player0Pawns.ForEach(objj => {
+                                PlayerPawns [0].ForEach(objj => {
                                     if ( objj.transform.position == markposition )
                                         skip = true;
                                 });
@@ -116,13 +139,13 @@ public class PawnsController : MonoBehaviour {
                             } else skip = true;
                         }
                     });
-                    Player1Pawns.ForEach(obj => {
+                    PlayerPawns [1].ForEach(obj => {
                         if ( obj.transform.position == markposition ) {
                             if ( player == 0 && !changed ) {
                                 changed = true;
                                 Vector3 objPosition = obj.transform.position;
                                 markposition = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
-                                Player1Pawns.ForEach(objj => {
+                                PlayerPawns [1].ForEach(objj => {
                                     if ( objj.transform.position == markposition )
                                         skip = true;
                                 });
@@ -132,7 +155,7 @@ public class PawnsController : MonoBehaviour {
                             } else skip = true;
                         }
                     });
-                    Player0Pawns.ForEach(obj => {
+                    PlayerPawns [0].ForEach(obj => {
                         if ( obj.transform.position == markposition && player == 0 )
                             skip = true;
                     });
@@ -161,9 +184,9 @@ public class PawnsController : MonoBehaviour {
                 if ( obj.Value != null ) {
 
                     if ( obj.Value.GetComponent<PawnController>().player == 0 )
-                        Player0Pawns.Remove(obj.Value);
+                        PlayerPawns [0].Remove(obj.Value);
                     else
-                        Player1Pawns.Remove(obj.Value);
+                        PlayerPawns [1].Remove(obj.Value);
                     Destroy(obj.Value);
                     round--;
                     block = true;
