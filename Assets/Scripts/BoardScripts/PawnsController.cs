@@ -131,20 +131,30 @@ public class PawnsController : MonoBehaviour {
 		bool queen = pawn.GetComponent<PawnController>().queen;
 		Vector3 pawnPosition = pawn.transform.position;
 		if ( queen ) {
-			for ( int i = 1 ; i <= 7 ; i++ ) {
-				Vector3 markposition = new Vector3(pawnPosition.x + ( 2 * i / 2 ) * ( 1 - 2 * i % 2 ) , pawnPosition.y + ( 2 * j / 2 ) * ( 1 - 2 * j % 2 ) , 0);
+			int directions = 0;
+			for ( int i = 1 ; directions < 4 ; i++ ) {
+				bool skip = false;
+				Vector3 markposition;
+				if ( directions < 2 )
+					markposition = new Vector3(pawnPosition.x + 2 * i , pawnPosition.y + ( 2 * i ) * ( -1 * directions % 2 == 0 ? 1 : -1 ) , pawnPosition.z);
+				else
+					markposition = new Vector3(pawnPosition.x - 2 * i , pawnPosition.y - ( 2 * i ) * ( -1 * directions % 2 == 0 ? 1 : -1 ) , pawnPosition.z);
 				PlayerPawns.ForEach(Pawns => {
 					Pawns.ForEach(Pawn => {
 						if ( Pawn.transform.position == markposition )
 							skip = true;
 					});
 				});
+
+				if ( skip || markposition.x < -8 || markposition.x > 8 || markposition.y > 8 || markposition.y < -8 ) {
+					directions++;
+					i = 0;
+					continue;
+				}
+				var mark = Instantiate(MoveMark , pawn.transform);
+				mark.transform.position = markposition;
+				marks.Add(mark , null);
 			}
-			if ( skip )
-				continue;
-			var mark = Instantiate(MoveMark , pawn.transform);
-			mark.transform.position = markposition;
-			marks.Add(mark , null);
 
 
 		} else {
