@@ -48,7 +48,6 @@ public class PawnsController : MonoBehaviour {
 		return newPawn;
 	}
 
-
 	void Update() {
 		if ( round > 1 )
 			round = 0;
@@ -97,34 +96,49 @@ public class PawnsController : MonoBehaviour {
 	public void markAtacks(GameObject pawn) {
 		int player = pawn.GetComponent<PawnController>().player == 1 ? 0 : 1;
 		Vector3 pawnPosition = pawn.transform.position;
-		for ( int i = 0 ; i < 2 ; i++ ) {
-			for ( int j = 0 ; j < 2 ; j++ ) {
-				Vector3 markposition = new Vector3(2 - ( 4 * ( i % 2 ) ) + pawnPosition.x , 2 - ( j % 2 * 4 ) + pawnPosition.y , 0);
-				PlayerPawns [player].ForEach(obj => {
-					bool skip = false;
-					GameObject beaten = null;
-					if ( obj.transform.position == markposition ) {
-						beaten = obj;
-						Vector3 objPosition = obj.transform.position;
-						Vector3 markpos = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
-						PlayerPawns.ForEach(Pawns => {
-							Pawns.ForEach(objj => {
-								if ( objj.transform.position == markpos )
-									skip = true;
+		if ( pawn.GetComponent<PawnController>().queen ) {
+			int directions = 0;
+			for ( int i = 0 ; directions < 4 ; i++ ) {
+				Vector3 markposition;
+				bool skip = false;
+				if ( directions < 2 )
+					markposition = new Vector3(pawnPosition.x + 2 * i , pawnPosition.y + ( 2 * i ) * ( -1 * directions % 2 == 0 ? 1 : -1 ) , pawnPosition.z);
+				else
+					markposition = new Vector3(pawnPosition.x - 2 * i , pawnPosition.y - ( 2 * i ) * ( -1 * directions % 2 == 0 ? 1 : -1 ) , pawnPosition.z);
+				//TODO
+			}
+		} else {
+			for ( int i = 0 ; i < 2 ; i++ ) {
+				for ( int j = 0 ; j < 2 ; j++ ) {
+					Vector3 markposition = new Vector3(2 - ( 4 * ( i % 2 ) ) + pawnPosition.x , 2 - ( j % 2 * 4 ) + pawnPosition.y , 0);
+					PlayerPawns [player].ForEach(obj => {
+						bool skip = false;
+						GameObject beaten = null;
+						if ( obj.transform.position == markposition ) {
+							beaten = obj;
+							Vector3 objPosition = obj.transform.position;
+							Vector3 markpos = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
+							PlayerPawns.ForEach(Pawns => {
+								Pawns.ForEach(objj => {
+									if ( objj.transform.position == markpos )
+										skip = true;
+								});
 							});
-						});
-						if ( skip || !( markpos.x > -8 && markpos.x < 8 && markpos.y < 8 && markpos.y > -8 ) )
-							return;
-						else {
-							var mark = Instantiate(MoveMark , pawn.transform);
-							mark.transform.position = markpos;
-							marks.Add(mark , beaten);
+							if ( skip || !( markpos.x > -8 && markpos.x < 8 && markpos.y < 8 && markpos.y > -8 ) )
+								return;
+							else {
+								var mark = Instantiate(MoveMark , pawn.transform);
+								mark.transform.position = markpos;
+								marks.Add(mark , beaten);
+							}
 						}
-					}
-				});
+					});
+				}
 			}
 		}
 	}
+
+
 
 	public void markMoves(GameObject pawn) {
 		int player = pawn.GetComponent<PawnController>().player;
