@@ -67,26 +67,68 @@ public class PawnsController : MonoBehaviour {
 		bool avaiable = false;
 		int player = pawn.GetComponent<PawnController>().player == 1 ? 0 : 1;   //player which is attacked
 		Vector3 pawnPosition = pawn.transform.position;
-		for ( int i = 0 ; i < 2 ; i++ ) {
-			for ( int j = 0 ; j < 2 ; j++ ) {
-				Vector3 markposition = new Vector3(2 - ( 4 * ( i % 2 ) ) + pawnPosition.x , 2 - ( j % 2 * 4 ) + pawnPosition.y , 0);
+		bool queen = pawn.GetComponent<PawnController>().queen;
+		if ( queen ) {
+			int directions = 0;
+			for ( int i = 1 ; directions < 4 ; i++ ) {
+				bool skip = false;
+				Vector3 markposition;
+				if ( directions < 2 )
+					markposition = new Vector3(pawnPosition.x + 2 * i , pawnPosition.y + ( 2 * i ) * ( -1 * directions % 2 == 0 ? 1 : -1 ) , pawnPosition.z);
+				else
+					markposition = new Vector3(pawnPosition.x - 2 * i , pawnPosition.y - ( 2 * i ) * ( -1 * directions % 2 == 0 ? 1 : -1 ) , pawnPosition.z);
 				PlayerPawns [player].ForEach(obj => {
-					bool skip = false;
 					if ( obj.transform.position == markposition ) {
-						Vector3 objPosition = obj.transform.position;
-						Vector3 markpos = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
-						PlayerPawns [player].ForEach(objj => {
-							if ( objj.transform.position == markpos )
-								skip = true;
+						Vector3 objPos = obj.transform.position;
+						Vector3 markpos = new Vector3(markposition.x + ( objPos.x - pawnPosition.x ) , markposition.y + ( objPos.y - pawnPosition.y ) , 0);
+						PlayerPawns.ForEach(Pawns => {
+							Pawns.ForEach(objj => {
+								if ( objj.transform.position == markpos )
+									skip = true;
+							});
 						});
+
 						if ( !skip && ( markpos.x > -8 && markpos.x < 8 && markpos.y < 8 && markpos.y > -8 ) ) {
 							avaiable = true;
 							return;
+						} else {
+							i = 0;
+							directions++;
 						}
 					}
 				});
+				if ( markposition.x < -8 || markposition.x > 8 || markposition.y > 8 || markposition.y < -8 ) {
+					i = 0;
+					directions++;
+				}
+
 				if ( avaiable )
 					return avaiable;
+			}
+		} else {
+			for ( int i = 0 ; i < 2 ; i++ ) {
+				for ( int j = 0 ; j < 2 ; j++ ) {
+					Vector3 markposition = new Vector3(2 - ( 4 * ( i % 2 ) ) + pawnPosition.x , 2 - ( j % 2 * 4 ) + pawnPosition.y , 0);
+					PlayerPawns [player].ForEach(obj => {
+						bool skip = false;
+						if ( obj.transform.position == markposition ) {
+							Vector3 objPosition = obj.transform.position;
+							Vector3 markpos = new Vector3(markposition.x + ( objPosition.x - pawnPosition.x ) , markposition.y + ( objPosition.y - pawnPosition.y ) , 0);
+							PlayerPawns.ForEach(Pawns => {
+								Pawns.ForEach(objj => {
+									if ( objj.transform.position == markpos )
+										skip = true;
+								});
+							});
+							if ( !skip && ( markpos.x > -8 && markpos.x < 8 && markpos.y < 8 && markpos.y > -8 ) ) {
+								avaiable = true;
+								return;
+							}
+						}
+					});
+					if ( avaiable )
+						return avaiable;
+				}
 			}
 		}
 
@@ -101,11 +143,37 @@ public class PawnsController : MonoBehaviour {
 			for ( int i = 0 ; directions < 4 ; i++ ) {
 				Vector3 markposition;
 				bool skip = false;
+				GameObject beaten = null;
 				if ( directions < 2 )
 					markposition = new Vector3(pawnPosition.x + 2 * i , pawnPosition.y + ( 2 * i ) * ( -1 * directions % 2 == 0 ? 1 : -1 ) , pawnPosition.z);
 				else
 					markposition = new Vector3(pawnPosition.x - 2 * i , pawnPosition.y - ( 2 * i ) * ( -1 * directions % 2 == 0 ? 1 : -1 ) , pawnPosition.z);
-				//TODO
+				PlayerPawns [player].ForEach(obj => {
+					if ( obj.transform.position == markposition ) {
+						beaten = obj;
+						Vector3 objPos = obj.transform.position;
+						Vector3 markpos = new Vector3(markposition.x + ( objPos.x - pawnPosition.x ) , markposition.y + ( objPos.y - pawnPosition.y ) , 0);
+						PlayerPawns.ForEach(Pawns => {
+							Pawns.ForEach(objj => {
+								if ( objj.transform.position == markpos )
+									skip = true;
+							});
+						});
+						if ( skip || !( markpos.x > -8 && markpos.x < 8 && markpos.y < 8 && markpos.y > -8 ) ) {
+							i = 0;
+							directions++;
+							return;
+						} else {
+							var mark = Instantiate(MoveMark , pawn.transform);
+							mark.transform.position = markpos;
+							marks.Add(mark , beaten);
+						}
+					}
+				});
+				if ( markposition.x < -8 || markposition.x > 8 || markposition.y > 8 || markposition.y < -8 ) {
+					directions++;
+					i = 0;
+				}
 			}
 		} else {
 			for ( int i = 0 ; i < 2 ; i++ ) {
