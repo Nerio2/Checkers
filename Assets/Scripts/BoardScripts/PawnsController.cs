@@ -80,7 +80,7 @@ public class PawnsController : MonoBehaviour {
 				PlayerPawns [player].ForEach(obj => {
 					if ( obj.transform.position == markposition ) {
 						Vector3 objPos = obj.transform.position;
-						Vector3 markpos = new Vector3(markposition.x + ( objPos.x - pawnPosition.x ) , markposition.y + ( objPos.y - pawnPosition.y ) , 0);
+						Vector3 markpos = new Vector3(pawnPosition.x<markposition.x?markposition.x+2:markposition.x-2 , pawnPosition.y<markposition.y?markposition.y+2:markposition.y-2 , 0);
 						PlayerPawns.ForEach(Pawns => {
 							Pawns.ForEach(objj => {
 								if ( objj.transform.position == markpos )
@@ -152,18 +152,14 @@ public class PawnsController : MonoBehaviour {
 					if ( obj.transform.position == markposition ) {
 						beaten = obj;
 						Vector3 objPos = obj.transform.position;
-						Vector3 markpos = new Vector3(markposition.x + ( objPos.x - pawnPosition.x ) , markposition.y + ( objPos.y - pawnPosition.y ) , 0);
+						Vector3 markpos = new Vector3(pawnPosition.x < markposition.x ? markposition.x + 2 : markposition.x - 2 , pawnPosition.y < markposition.y ? markposition.y + 2 : markposition.y - 2 , 0);
 						PlayerPawns.ForEach(Pawns => {
 							Pawns.ForEach(objj => {
 								if ( objj.transform.position == markpos )
 									skip = true;
 							});
 						});
-						if ( skip || !( markpos.x > -8 && markpos.x < 8 && markpos.y < 8 && markpos.y > -8 ) ) {
-							i = 0;
-							directions++;
-							return;
-						} else {
+						if ( !skip && ( markpos.x > -8 && markpos.x < 8 && markpos.y < 8 && markpos.y > -8 ) ) {
 							var mark = Instantiate(MoveMark , pawn.transform);
 							mark.transform.position = markpos;
 							marks.Add(mark , beaten);
@@ -205,8 +201,6 @@ public class PawnsController : MonoBehaviour {
 			}
 		}
 	}
-
-
 
 	public void markMoves(GameObject pawn) {
 		int player = pawn.GetComponent<PawnController>().player;
@@ -260,6 +254,7 @@ public class PawnsController : MonoBehaviour {
 	}
 
 	public void chosen(GameObject pawn) {
+		Debug.Log(isAtackAvailable(pawn));
 		int player = pawn.GetComponent<PawnController>().player;
 		click();
 		if ( block && !pawn.Equals(marked) ) {
